@@ -2,12 +2,15 @@ package jwtspringsecurity.JWT.security.config;
 
 import jwtspringsecurity.JWT.security.enums.Role;
 import jwtspringsecurity.JWT.security.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,7 +18,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+@Configuration
+@EnableWebSecurity
 public class SecurityConfiguration {
+    @Value("${url.private-url}")
+    private String baseUrl;
+
     private final UserService userService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -26,9 +34,9 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(AbstractHttpConfigurer:: disable)
-                .authorizeHttpRequests(request -> request.requestMatchers("app/v1/auth/++").permitAll()
-                        .requestMatchers("app/v1/admin").hasAuthority(Role.ADMIN.name())
-                        .requestMatchers("app/v1/users").hasAuthority(Role.USER.name()))
+                .authorizeHttpRequests(request -> request.requestMatchers(baseUrl+"/auth/++").permitAll()
+                        .requestMatchers(baseUrl+"/admin").hasAuthority(Role.ADMIN.name())
+                        .requestMatchers(baseUrl+"/user").hasAuthority(Role.USER.name()))
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider()).addFilterBefore(
                         jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
